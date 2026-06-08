@@ -23,6 +23,16 @@ function MachineCanvas({ machine, activeStates = [], activeTransition = null }) 
   const activeSet = new Set(activeStates);
   const stateMap = new Map(states.map((s) => [s.id, s]));
 
+  // Dynamic viewBox: fit all states with 60px padding
+  const pad = 60;
+  const xs = states.map((s) => s.x);
+  const ys = states.map((s) => s.y);
+  const minX = Math.min(...xs) - pad;
+  const maxX = Math.max(...xs) + pad;
+  const minY = Math.min(...ys) - pad;
+  const maxY = Math.max(...ys) + pad;
+  const viewBox = `${minX} ${minY} ${maxX - minX} ${maxY - minY}`;
+
   // Group transitions by (from, to) pair
   const grouped = new Map();
   transitions.forEach((t) => {
@@ -32,7 +42,7 @@ function MachineCanvas({ machine, activeStates = [], activeTransition = null }) 
   });
 
   return (
-    <svg width="100%" height="100%" viewBox="0 0 500 400" style={{ background: 'transparent' }}>
+    <svg width="100%" height="100%" viewBox={viewBox} style={{ background: 'transparent' }}>
       <defs>
         <marker
           id="arrowhead"
@@ -93,13 +103,13 @@ function MachineCanvas({ machine, activeStates = [], activeTransition = null }) 
         const ey = toState.y + r * Math.sin(endAngle);
 
         if (fromId === toId) {
-          // Self-loop arc
+          // Self-loop arc — cubic bezier so end tangent points INTO the circle
           const cx = fromState.x;
           const cy = fromState.y;
           return (
             <g key={key}>
               <path
-                d={`M ${cx - r} ${cy - 10} Q ${cx - r - 40} ${cy - 60}, ${cx + r + 10} ${cy - 10}`}
+                d={`M ${cx - 24} ${cy - 14} C ${cx - 40} ${cy - 50}, ${cx + 45} ${cy - 50}, ${cx + 22} ${cy - 14}`}
                 fill="none"
                 stroke={edgeColor}
                 strokeWidth={strokeW}

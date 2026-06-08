@@ -5,10 +5,22 @@
  *   stack   — array of strings (top of stack = last element)
  */
 function StackView({ stack }) {
-  if (!stack || stack.length === 0) {
+  if (stack === null || stack === undefined) {
     return (
       <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
         Stack will appear here.
+      </div>
+    );
+  }
+
+  // Empty stack is valid data — show it as such
+  if (stack.length === 0) {
+    return (
+      <div>
+        <h4 className="panel-heading" style={{ marginBottom: 8 }}>Stack</h4>
+        <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'monospace', padding: '8px 0' }}>
+          [ empty ]
+        </div>
       </div>
     );
   }

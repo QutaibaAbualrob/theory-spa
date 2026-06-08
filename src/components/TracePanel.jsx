@@ -33,8 +33,8 @@ function TracePanel({ steps, accepted, currentStepIndex }) {
         <span>State(s)</span>
       </div>
 
-      {/* Steps */}
-      <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+      {/* Steps — let parent panel scroll, no fixed height */}
+      <div>
         {steps.map((step, idx) => {
           const isCurrent = idx === currentStepIndex;
           const stateStr = step.currentStates

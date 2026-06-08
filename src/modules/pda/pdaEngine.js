@@ -29,6 +29,7 @@ export function simulatePDA(machine, input) {
     index: 0,
     symbol: null,
     state: currentState,
+    currentState: currentState,
     stack: [...stack],
     action: 'Start',
   });
@@ -101,6 +102,7 @@ export function simulatePDA(machine, input) {
       index: steps.length,
       symbol: transition.read === 'ε' ? null : transition.read,
       state: currentState,
+      currentState: currentState,
       stack: [...stack],
       action,
     });
@@ -120,9 +122,10 @@ export function simulatePDA(machine, input) {
     };
   }
 
-  // Check acceptance by final state
+  // Check acceptance by final state (AND empty stack — prevents false accepts)
   const finalState = machine.states.find((s) => s.id === currentState);
-  const accepted = finalState ? finalState.accept || false : false;
+  const stackEmpty = stack.length === 0 || (stack.length === 1 && stack[0] === stackStart);
+  const accepted = finalState ? finalState.accept && stackEmpty : false;
 
   return { accepted, steps };
 }
