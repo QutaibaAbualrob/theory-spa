@@ -23,14 +23,29 @@ function MachineCanvas({ machine, activeStates = [], activeTransition = null }) 
   const activeSet = new Set(activeStates);
   const stateMap = new Map(states.map((s) => [s.id, s]));
 
-  // Dynamic viewBox: fit all states with 60px padding
+  // Dynamic viewBox: fit all states with 60px padding, enforce minimum size
   const pad = 60;
   const xs = states.map((s) => s.x);
   const ys = states.map((s) => s.y);
-  const minX = Math.min(...xs) - pad;
-  const maxX = Math.max(...xs) + pad;
-  const minY = Math.min(...ys) - pad;
-  const maxY = Math.max(...ys) + pad;
+  let minX = Math.min(...xs) - pad;
+  let maxX = Math.max(...xs) + pad;
+  let minY = Math.min(...ys) - pad;
+  let maxY = Math.max(...ys) + pad;
+
+  const MIN_W = 400;
+  const MIN_H = 300;
+  const w = maxX - minX;
+  const h = maxY - minY;
+  if (w < MIN_W) {
+    const extra = MIN_W - w;
+    minX -= extra / 2;
+    maxX += extra / 2;
+  }
+  if (h < MIN_H) {
+    const extra = MIN_H - h;
+    minY -= extra / 2;
+    maxY += extra / 2;
+  }
   const viewBox = `${minX} ${minY} ${maxX - minX} ${maxY - minY}`;
 
   // Group transitions by (from, to) pair
