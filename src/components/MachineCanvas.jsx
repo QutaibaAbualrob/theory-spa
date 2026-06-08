@@ -6,9 +6,10 @@ import { perpOffset } from '../utils/graphLayout';
  * Props:
  *   machine             — machine object { states, transitions }
  *   activeStates        — array of state IDs to highlight
- *   activeTransition    — { from, to } or null
+ *   dimmedStates        — array of state IDs to show as muted (carried over via self-loops)
+ *   activeTransition    — { from, to } or array of { from, to }, or null
  */
-function MachineCanvas({ machine, activeStates = [], activeTransition = null }) {
+function MachineCanvas({ machine, activeStates = [], dimmedStates = [], activeTransition = null }) {
   if (!machine || !machine.states || machine.states.length === 0) {
     return (
       <svg width="100%" height="100%" viewBox="0 0 500 400" style={{ background: 'transparent' }}>
@@ -21,6 +22,7 @@ function MachineCanvas({ machine, activeStates = [], activeTransition = null }) 
 
   const { states, transitions } = machine;
   const activeSet = new Set(activeStates);
+  const dimmedSet = new Set(dimmedStates);
   const stateMap = new Map(states.map((s) => [s.id, s]));
 
   // Dynamic viewBox: fit all states with 60px padding, enforce minimum size
@@ -99,7 +101,17 @@ function MachineCanvas({ machine, activeStates = [], activeTransition = null }) 
         const strokeW = isActive ? 2.5 : 1.5;
 
         const symbols = txns
-          .map((t) => (t.symbol === 'ε' ? 'ε' : t.symbol))
+          .map((t) => {
+            if (t.read !== undefined) {
+              // PDA format: read, pop → push
+              const read = t.read === 'ε' ? 'ε' : t.read;
+              const pop = t.pop === 'ε' ? 'ε' : t.pop;
+              const push = t.push === 'ε' ? 'ε' : t.push;
+              return `${read}, ${pop} → ${push}`;
+            }
+            // DFA/NFA format
+            return t.symbol === 'ε' ? 'ε' : t.symbol;
+          })
           .join(', ');
 
         // Calculate edge points from circle edges (r=28)
@@ -171,10 +183,11 @@ function MachineCanvas({ machine, activeStates = [], activeTransition = null }) 
       {/* States (render on top of edges) */}
       {states.map((state) => {
         const isActive = activeSet.has(state.id);
-        const fillColor = isActive ? '#e3f2fd' : 'white';
-        const strokeColor = isActive ? 'var(--accent)' : '#555';
-        const strokeW = isActive ? 3 : 2;
-        const filterVal = isActive ? 'url(#glow)' : undefined;
+        const isDimmed = isActive && dimmedSet.has(state.id);
+        const fillColor = isActive ? (isDimmed ? '#f0f4ff' : '#e3f2fd') : 'white';
+        const strokeColor = isActive ? (isDimmed ? '#8899bb' : 'var(--accent)') : '#555';
+        const strokeW = isActive ? (isDimmed ? 2.5 : 3) : 2;
+        const filterVal = isActive && !isDimmed ? 'url(#glow)' : undefined;
 
         return (
           <g key={state.id}>

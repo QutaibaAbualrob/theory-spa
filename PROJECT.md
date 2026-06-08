@@ -237,6 +237,27 @@ Computed in views via trace step comparison.
 | `src/components/MachineCanvas.jsx` | Changed `isActive` check to accept either a single `{from, to}` object (DFA) or an array (NFA) — backward compatible. |
 | `src/modules/nfa/NFAView.jsx` | Replaced `const activeTransition = null` with computation that finds all `{from, to}` pairs matching the current symbol between consecutive trace steps. NFA edges now highlight during stepping. |
 
+### 2026-06-08 — PDA edge labels (MachineCanvas handles `read, pop → push` format)
+
+| File | Change |
+|------|--------|
+| `src/components/MachineCanvas.jsx` | Edge label generator now checks for `t.read !== undefined` (PDA format) and renders `read, pop → push`. Falls through to `t.symbol` for DFA/NFA. |
+
+**Bug:** PDA transitions use `{ read, pop, push }` instead of `{ symbol }`. MachineCanvas was reading `t.symbol` which is undefined for PDA → edge labels were blank.
+
+### 2026-06-08 — stale trace fix (SET_INPUT clears simulation state)
+
+| File | Change |
+|------|--------|
+| `src/modules/dfa/DFAView.jsx` | SET_INPUT reducer case now also clears `trace`, `currentStepIndex`, `accepted`, `error` |
+| `src/modules/nfa/NFAView.jsx` | Same fix |
+| `src/modules/pda/PDAView.jsx` | Same fix |
+| `src/modules/tm/TMView.jsx` | Same fix |
+
+**Bug:** Changing the input after running left the old trace in state. Clicking Step would use the stale trace length for `lastStep`, causing premature "Accepted" display. Also the trace panel showed the old run's steps, not matching the current input.
+
+**Fix:** The `SET_INPUT` action in each reducer now atomically resets `trace: [], currentStepIndex: 0, accepted: null, error: null` alongside the new input value. GNFA had no SET_INPUT case (read-only module) so it was unaffected.
+
 ### 2026-06-08 — layout sticky chrome
 
 | File | Change |

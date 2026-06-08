@@ -35,7 +35,7 @@ function reducer(state, action) {
             : '',
       };
     case 'SET_INPUT':
-      return { ...state, input: action.value };
+      return { ...state, input: action.value, trace: [], currentStepIndex: 0, accepted: null, error: null };
     case 'RUN_DONE':
       return {
         ...state,

@@ -34,7 +34,7 @@ function reducer(state, action) {
             : '',
       };
     case 'SET_INPUT':
-      return { ...state, input: action.value };
+      return { ...state, input: action.value, trace: [], currentStepIndex: 0, accepted: null, error: null };
     case 'RUN_DONE':
       return {
         ...state,
@@ -111,6 +111,24 @@ function NFAView() {
           return transitions.length > 0 ? transitions : null;
         })()
       : null;
+
+  // States carried over via self-loops (dimmed) vs freshly entered (full glow)
+  const dimmedStates =
+    trace.length > 0 && currentStepIndex > 0 && trace[currentStepIndex] && machine
+      ? (() => {
+          const prevStates = trace[currentStepIndex - 1].currentStates || [];
+          const currStates = trace[currentStepIndex].currentStates || [];
+          const symbol = trace[currentStepIndex].symbol;
+          if (!symbol) return [];
+          return currStates.filter(s => {
+            const entering = machine.transitions.filter(
+              t => t.to === s && t.symbol === symbol && prevStates.includes(t.from)
+            );
+            // Dimmed if ALL entering transitions are self-loops (from === s)
+            return entering.length > 0 && entering.every(t => t.from === s);
+          });
+        })()
+      : [];
 
   const currentPreset = machine
     ? nfaPresets.find((p) => p.id === machine.id) || null
@@ -195,6 +213,7 @@ function NFAView() {
         <MachineCanvas
           machine={machine}
           activeStates={activeStates}
+          dimmedStates={dimmedStates}
           activeTransition={activeTransition}
         />
       </div>
