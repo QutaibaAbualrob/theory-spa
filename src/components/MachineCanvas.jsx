@@ -91,10 +91,9 @@ function MachineCanvas({ machine, activeStates = [], activeTransition = null }) 
         const toState = stateMap.get(toId);
         if (!fromState || !toState) return null;
 
-        const isActive =
-          activeTransition &&
-          activeTransition.from === fromId &&
-          activeTransition.to === toId;
+        const isActive = Array.isArray(activeTransition)
+          ? activeTransition.some(t => t.from === fromId && t.to === toId)
+          : activeTransition && activeTransition.from === fromId && activeTransition.to === toId;
         const edgeColor = isActive ? 'var(--accent)' : '#555';
         const markerId = isActive ? 'arrowhead-accent' : 'arrowhead';
         const strokeW = isActive ? 2.5 : 1.5;

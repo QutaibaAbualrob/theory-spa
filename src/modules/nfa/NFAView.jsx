@@ -90,9 +90,27 @@ function NFAView() {
       ? trace[currentStepIndex].currentStates || []
       : [];
 
-  // For NFA, highlight transitions isn't straightforward with multiple states
-  // so we leave activeTransition null (frontier is the active states)
-  const activeTransition = null;
+  // NFA active transitions: all (from, to) pairs reachable on the current symbol
+  // between the previous step's states and the current step's states
+  const activeTransition =
+    trace.length > 0 && currentStepIndex > 0 && trace[currentStepIndex - 1]
+      ? (() => {
+          const prevStates = trace[currentStepIndex - 1].currentStates || [];
+          const currStates = trace[currentStepIndex].currentStates || [];
+          const symbol = trace[currentStepIndex].symbol;
+          const transitions = [];
+          for (const from of prevStates) {
+            for (const to of currStates) {
+              if (machine.transitions.some(
+                t => t.from === from && t.to === to && t.symbol === symbol
+              )) {
+                transitions.push({ from, to });
+              }
+            }
+          }
+          return transitions.length > 0 ? transitions : null;
+        })()
+      : null;
 
   const currentPreset = machine
     ? nfaPresets.find((p) => p.id === machine.id) || null
