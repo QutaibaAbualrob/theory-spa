@@ -5,6 +5,7 @@ import DFAView from './modules/dfa/DFAView';
 import NFAView from './modules/nfa/NFAView';
 import PDAView from './modules/pda/PDAView';
 import TMView from './modules/tm/TMView';
+import GNFAView from './modules/gnfa/GNFAView';
 
 const TABS = ['DFA', 'NFA', 'PDA', 'TM Addition', 'GNFA'];
 
@@ -39,7 +40,7 @@ function App() {
         {activeTab === 'NFA' && <NFAView />}
         {activeTab === 'PDA' && <PDAView />}
         {activeTab === 'TM Addition' && <TMView />}
-        {activeTab === 'GNFA' && <Placeholder title="GNFA" />}
+        {activeTab === 'GNFA' && <GNFAView />}
       </main>
     </div>
   );
