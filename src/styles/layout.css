@@ -170,6 +170,15 @@
   color: white;
 }
 
+/* ── Tape Header ── */
+
+.tape-header {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
 /* ── Placeholder Text ── */
 
 .panel-placeholder {

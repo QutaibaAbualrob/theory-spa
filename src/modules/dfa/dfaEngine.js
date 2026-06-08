@@ -1,72 +1,100 @@
 /**
- * Simulate a DFA step-by-step.
- * Returns { accepted, steps, error? }
- * Each step: { index, symbol, currentState }
+ * DFA Engine
+ * ----------------------------------------------------------------------------
+ * simulateDFA(machine, input) → { accepted, steps, error }
+ * validateDFA(machine)        → { valid, errors }
  */
-export function simulateDFA(machine, input) {
-  const { states, transitions } = machine;
-  let current = states.find((s) => s.start);
-  if (!current) return { accepted: false, steps: [], error: "No start state defined." };
 
-  const steps = [{ index: 0, symbol: null, currentState: current.id }];
+export function simulateDFA(machine, input) {
+  const steps = [];
+
+  // Find start state
+  const startState = machine.states.find((s) => s.start);
+  if (!startState) {
+    return { accepted: false, steps: [], error: 'No start state defined.' };
+  }
+
+  // Step 0: before consuming any input
+  steps.push({ index: 0, symbol: null, currentState: startState.id });
+
+  let currentId = startState.id;
 
   for (let i = 0; i < input.length; i++) {
-    const symbol = input[i];
-    const t = transitions.find(
-      (t) => t.from === current.id && t.symbol === symbol
+    const sym = input[i];
+    const transition = machine.transitions.find(
+      (t) => t.from === currentId && t.symbol === sym
     );
-    if (!t) {
-      steps.push({ index: i + 1, symbol, currentState: null, rejected: true });
+
+    if (!transition) {
+      steps.push({
+        index: i + 1,
+        symbol: sym,
+        currentState: null,
+      });
       return {
         accepted: false,
         steps,
-        error: `No transition from ${current.id} on '${symbol}'.`,
+        error: `No transition from ${currentId} on '${sym}'.`,
       };
     }
-    current = states.find((s) => s.id === t.to);
-    if (!current) {
-      return { accepted: false, steps, error: `State '${t.to}' not found.` };
-    }
-    steps.push({ index: i + 1, symbol, currentState: current.id });
+
+    currentId = transition.to;
+    steps.push({ index: i + 1, symbol: sym, currentState: currentId });
   }
 
-  return { accepted: !!current.accept, steps };
+  const finalState = machine.states.find((s) => s.id === currentId);
+  const accepted = finalState ? finalState.accept : false;
+
+  return { accepted, steps, error: null };
 }
 
-/**
- * Validate a DFA machine definition.
- * Returns { valid, errors[] }
- */
 export function validateDFA(machine) {
   const errors = [];
-  const { states, alphabet, transitions } = machine;
 
-  if (!states || states.length === 0) errors.push("No states defined.");
-  if (!alphabet || alphabet.length === 0) errors.push("No alphabet defined.");
-  if (!transitions) errors.push("No transitions defined.");
+  if (!machine.states || machine.states.length === 0) {
+    errors.push('Machine must have at least one state.');
+    return { valid: false, errors };
+  }
 
-  const stateIds = new Set(states.map((s) => s.id));
-  const startStates = states.filter((s) => s.start);
-  if (startStates.length !== 1) errors.push("Exactly one start state required.");
+  // Exactly one start state
+  const startStates = machine.states.filter((s) => s.start);
+  if (startStates.length === 0) {
+    errors.push('No start state defined. Exactly one state must have start: true.');
+  } else if (startStates.length > 1) {
+    errors.push(`Multiple start states found: ${startStates.map((s) => s.id).join(', ')}. Exactly one is allowed.`);
+  }
 
-  // Check determinism: for each state + symbol, at most one transition
-  for (const s of states) {
-    for (const sym of alphabet) {
-      const matches = transitions.filter(
-        (t) => t.from === s.id && t.symbol === sym
-      );
-      if (matches.length > 1)
-        errors.push(`Non-deterministic: ${s.id} on '${sym}' has ${matches.length} transitions.`);
+  const stateIds = new Set(machine.states.map((s) => s.id));
+  const alphabet = new Set(machine.alphabet);
+
+  // Transition validity
+  machine.transitions.forEach((t, idx) => {
+    if (!stateIds.has(t.from)) {
+      errors.push(`Transition ${idx}: from-state "${t.from}" does not exist.`);
     }
-  }
+    if (!stateIds.has(t.to)) {
+      errors.push(`Transition ${idx}: to-state "${t.to}" does not exist.`);
+    }
+    if (!alphabet.has(t.symbol)) {
+      errors.push(`Transition ${idx}: symbol "${t.symbol}" is not in alphabet [${machine.alphabet.join(', ')}].`);
+    }
+  });
 
-  // Check all transitions reference valid states
-  for (const t of transitions) {
-    if (!stateIds.has(t.from)) errors.push(`Unknown from-state: '${t.from}'.`);
-    if (!stateIds.has(t.to)) errors.push(`Unknown to-state: '${t.to}'.`);
-    if (!alphabet.includes(t.symbol) && t.symbol !== "ε")
-      errors.push(`Symbol '${t.symbol}' not in alphabet.`);
-  }
+  // Duplicate transitions
+  const seen = new Map();
+  machine.transitions.forEach((t, idx) => {
+    const key = `${t.from}::${t.symbol}`;
+    if (seen.has(key)) {
+      const prev = seen.get(key);
+      if (prev !== t.to) {
+        errors.push(
+          `Duplicate transition from ${t.from} on '${t.symbol}': targets both ${prev} and ${t.to}.`
+        );
+      }
+    } else {
+      seen.set(key, t.to);
+    }
+  });
 
   return { valid: errors.length === 0, errors };
 }

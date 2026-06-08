@@ -1,48 +1,46 @@
 import { useState } from 'react';
 import Header from './components/Header';
 import TopTabs from './components/TopTabs';
-import ControlBar from './components/ControlBar';
+import DFAView from './modules/dfa/DFAView';
+import NFAView from './modules/nfa/NFAView';
+import PDAView from './modules/pda/PDAView';
+import TMView from './modules/tm/TMView';
 
 const TABS = ['DFA', 'NFA', 'PDA', 'TM Addition', 'GNFA'];
 
+function Placeholder({ title }) {
+  return (
+    <>
+      <div className="left-panel">
+        <h3 className="panel-heading">{title}</h3>
+        <p className="text-secondary">Coming soon.</p>
+      </div>
+      <div className="center-panel">
+        <div className="panel-placeholder">
+          {title} visualization will appear here.
+        </div>
+      </div>
+      <div className="right-panel">
+        <div className="panel-placeholder">Trace will appear here.</div>
+      </div>
+    </>
+  );
+}
+
 function App() {
   const [activeTab, setActiveTab] = useState('DFA');
-  const [input, setInput] = useState('');
 
   return (
     <div className="app-container">
       <Header />
       <TopTabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
-
-      <div className="main-content">
-        <aside className="left-panel">
-          <p className="panel-placeholder">
-            Select a module above and load a preset to begin.
-          </p>
-        </aside>
-
-        <main className="center-panel">
-          <p className="panel-placeholder">
-            Machine visualization will appear here.
-          </p>
-        </main>
-
-        <aside className="right-panel">
-          <p className="panel-placeholder">
-            Execution trace will appear here.
-          </p>
-        </aside>
-      </div>
-
-      <ControlBar
-        input={input}
-        onInputChange={(e) => setInput(e.target.value)}
-        onRun={() => {}}
-        onStep={() => {}}
-        onReset={() => {}}
-        onLoadExample={() => {}}
-        running={false}
-      />
+      <main className="main-content">
+        {activeTab === 'DFA' && <DFAView />}
+        {activeTab === 'NFA' && <NFAView />}
+        {activeTab === 'PDA' && <PDAView />}
+        {activeTab === 'TM Addition' && <TMView />}
+        {activeTab === 'GNFA' && <Placeholder title="GNFA" />}
+      </main>
     </div>
   );
 }
